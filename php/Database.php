@@ -17,10 +17,8 @@ class Database{
     public static function isUsernameTaken(string $username) : int{
         try{
             $username = strtolower($username);
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        	$stmt = $conn->prepare("SELECT * FROM users WHERE username = :username");
+        	$stmt = db()->prepare("SELECT * FROM users WHERE username = :username");
         	$stmt->bindParam(':username', $username, PDO::PARAM_STR);
         	$stmt->execute();
 
@@ -29,7 +27,6 @@ class Database{
         }catch(PDOException $e) {
             return 505;
         }
-        $conn = null;
     }
 
     public static function encryptPassword(string $password) : string{
@@ -132,25 +129,20 @@ class Database{
 
     public static function getUserCount() : int{
         try{
-            $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $stmt = $conn->prepare("SELECT COUNT(*) AS 'amount' FROM users");
+            $stmt = db()->prepare("SELECT COUNT(*) AS 'amount' FROM users");
             $stmt->execute();
 
             return ($stmt->rowCount() == 1) ? $stmt->fetch()['amount'] : -1;
         }catch(PDOException $e) {
             return -1;
         }
-        $conn = null;
     }
 
     public static function getPasswordCount($user_id) : int{
         try{
-            $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $stmt = $conn->prepare("SELECT COUNT(*) AS 'amount' FROM user_passwords WHERE user_id = :user_id;");
+            $stmt = db()->prepare("SELECT COUNT(*) AS 'amount' FROM user_passwords WHERE user_id = :user_id;");
             $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -158,7 +150,6 @@ class Database{
         }catch(PDOException $e) {
             return -1;
         }
-        $conn = null;
     }
 
     public static function getInfo() : string{
@@ -198,10 +189,7 @@ class Database{
 
         try{
 
-            $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-            $stmt = $conn->prepare("INSERT INTO users(username, email, password) VALUES(:username, :email, :password);");
+            $stmt = db()->prepare("INSERT INTO users(username, email, password) VALUES(:username, :email, :password);");
             $stmt->bindParam(':username', $username, PDO::PARAM_STR);
             $stmt->bindParam(':email', $email, PDO::PARAM_STR);
             $stmt->bindParam(':password', $encrypted_password, PDO::PARAM_STR);
@@ -210,7 +198,6 @@ class Database{
         }catch(PDOException $e) {
             return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function getToken(string $username, string $password, string $otp) : string{
@@ -247,24 +234,16 @@ class Database{
 
         $today = date('Y-m-d');
         if($user->accessed != $today){
-            try{
-                $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-                $stmt = $conn->prepare("UPDATE users SET accessed = :accessed WHERE username = :username");
+            try{    
+                $stmt = db()->prepare("UPDATE users SET accessed = :accessed WHERE username = :username");
                 $stmt->bindParam(':username', $username, PDO::PARAM_STR);
                 $stmt->bindParam(':accessed', $today, PDO::PARAM_STR);
                 $stmt->execute();
             }catch(PDOException $e) {}
-            $conn = null;
         }
 
         try{
-
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        	$stmt = $conn->prepare("SELECT p.password_id AS id, p.website, p.username, p.password, p.message FROM passwords p JOIN user_passwords up ON up.password_id = p.password_id JOIN users u ON u.user_id = up.user_id WHERE u.username = :username");
+        	$stmt = db()->prepare("SELECT p.password_id AS id, p.website, p.username, p.password, p.message FROM passwords p JOIN user_passwords up ON up.password_id = p.password_id JOIN users u ON u.user_id = up.user_id WHERE u.username = :username");
         	$stmt->bindParam(':username', $username, PDO::PARAM_STR);
         	$stmt->execute();
 
@@ -283,7 +262,6 @@ class Database{
         }catch(PDOException $e) {
             return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function deleteAccount(string $username, string $token) : string{
@@ -311,17 +289,13 @@ class Database{
 
         try{
 
-            $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-            $stmt = $conn->prepare("DELETE FROM users WHERE user_id = :user_id;");
+            $stmt = db()->prepare("DELETE FROM users WHERE user_id = :user_id;");
             $stmt->bindParam(':user_id', $user->user_id, PDO::PARAM_INT);
 
             return ($stmt->execute()) ? Display::json(0) : Display::json(11);
         }catch(PDOException $e) {
             return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function isPasswordOwnedByUser(string $username, int $password_id) : int{
@@ -329,10 +303,8 @@ class Database{
 
       try{
         $username = strtolower($username);
-        $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $stmt = $conn->prepare("SELECT p.password_id FROM passwords p JOIN user_passwords up ON up.password_id = p.password_id JOIN users u ON u.user_id = up.user_id WHERE u.username = :username AND p.password_id = :password_id");
+        $stmt = db()->prepare("SELECT p.password_id FROM passwords p JOIN user_passwords up ON up.password_id = p.password_id JOIN users u ON u.user_id = up.user_id WHERE u.username = :username AND p.password_id = :password_id");
         $stmt->bindParam(':username', $username, PDO::PARAM_STR);
         $stmt->bindParam(':password_id', $password_id, PDO::PARAM_INT);
         $stmt->execute();
@@ -341,7 +313,6 @@ class Database{
       }catch(PDOException $e) {
         return 505;
       }
-      $conn = null;
     }
 
     public static function savePassword(string $username, string $token, string $website, string $username2, string $password2, string $message) : string{
@@ -374,12 +345,9 @@ class Database{
 
         try{
 
-            $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
             $conn->beginTransaction();
 
-            $stmt = $conn->prepare("INSERT INTO passwords(website, username, password, message) VALUES(:website, :username, :password, :message);");
+            $stmt = db()->prepare("INSERT INTO passwords(website, username, password, message) VALUES(:website, :username, :password, :message);");
             $stmt->bindParam(':website', $website, PDO::PARAM_STR);
             $stmt->bindParam(':username', $username2, PDO::PARAM_STR);
             $stmt->bindParam(':password', $password2, PDO::PARAM_STR);
@@ -398,7 +366,6 @@ class Database{
         }catch(PDOException $e) {
             return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function importPasswords(string $username, string $token, string $json_passwords) : string{
@@ -428,6 +395,10 @@ class Database{
         $num_success = 0;
         $num_error = 0;
 
+        $conn = db();
+
+        $conn->beginTransaction();
+
         foreach($password_obj as &$password_data){
             if(!(strlen($password_data["password"]) >= 5 && strlen($password_data["password"]) <= 255)){ $num_error++; continue; }
             if(!(strlen($password_data["username"]) >= 3 && strlen($password_data["username"]) <= 255)){ $num_error++; continue; }
@@ -437,11 +408,6 @@ class Database{
             $website = strtolower($password_data["website"]);
 
             try{
-
-                $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-                $conn->beginTransaction();
     
                 $stmt = $conn->prepare("INSERT INTO passwords(website, username, password, message) VALUES(:website, :username, :password, :message);");
                 $stmt->bindParam(':website',  $website, PDO::PARAM_STR);
@@ -456,14 +422,14 @@ class Database{
                 $stmt->bindParam(':password_id', $password_id, PDO::PARAM_INT);
                 $stmt->bindParam(':user_id', $user->user_id, PDO::PARAM_INT);
     
-                $stmt->execute();
-    
-                ($conn->commit()) ? $num_success++ : $num_error++;
+                $stmt->execute() ? $num_success++ : $num_error++;
+
             }catch(PDOException $e) {
                 $num_error++;
             }
-            $conn = null;
         }
+
+        ($conn->commit()) ? $num_success++ : $num_error++;
 
         $JSON_OBJ = new StdClass;
         $JSON_OBJ->import_success = $num_success;
@@ -506,10 +472,8 @@ class Database{
 
         try{
             $website = strtolower($website);
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $stmt = $conn->prepare("UPDATE passwords SET website = :website, username = :username, password = :password, message = :message WHERE password_id = :password_id");
+            $stmt = db()->prepare("UPDATE passwords SET website = :website, username = :username, password = :password, message = :message WHERE password_id = :password_id");
             $stmt->bindParam(':website', $website, PDO::PARAM_STR);
             $stmt->bindParam(':username', $username2, PDO::PARAM_STR);
             $stmt->bindParam(':password', $password2, PDO::PARAM_STR);
@@ -521,7 +485,6 @@ class Database{
         }catch(PDOException $e) {
         	return Display::json(505);
         }
-        $conn = null;
 
     }
 
@@ -554,10 +517,7 @@ class Database{
         }
 
         try{
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        	$stmt = $conn->prepare("DELETE FROM user_passwords WHERE password_id = :password_id");
+        	$stmt = db()->prepare("DELETE FROM user_passwords WHERE password_id = :password_id");
             $stmt->bindParam(':password_id', $password_id, PDO::PARAM_INT);
         	$stmt->execute();
 
@@ -569,7 +529,6 @@ class Database{
         }catch(PDOException $e) {
         	return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function getPasswords(string $username, string $token) : string{
@@ -592,10 +551,7 @@ class Database{
 
         try{
 
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        	$stmt = $conn->prepare("SELECT p.password_id AS id, p.website, p.username, p.password, p.message FROM passwords p JOIN user_passwords up ON up.password_id = p.password_id JOIN users u ON u.user_id = up.user_id WHERE u.username = :username");
+        	$stmt = db()->prepare("SELECT p.password_id AS id, p.website, p.username, p.password, p.message FROM passwords p JOIN user_passwords up ON up.password_id = p.password_id JOIN users u ON u.user_id = up.user_id WHERE u.username = :username");
         	$stmt->bindParam(':username', $username, PDO::PARAM_STR);
         	$stmt->execute();
 
@@ -611,7 +567,6 @@ class Database{
         }catch(PDOException $e) {
             return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function enable2Fa(string $username, string $token) : string{
@@ -639,8 +594,8 @@ class Database{
 
         try{
             $username = strtolower($username);
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            $conn = db();
 
         	$stmt = $conn->prepare("UPDATE users SET 2fa_secret = :secret WHERE username = :username");
             $stmt->bindParam(':secret', $secret, PDO::PARAM_STR);
@@ -660,7 +615,6 @@ class Database{
         }catch(PDOException $e) {
         	return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function disable2Fa(string $username, string $token) : string{
@@ -683,10 +637,8 @@ class Database{
 
         try{
             $username = strtolower($username);
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        	$stmt = $conn->prepare("UPDATE users SET 2fa_secret = null WHERE username = :username");
+        	$stmt = db()->prepare("UPDATE users SET 2fa_secret = null WHERE username = :username");
             $stmt->bindParam(':username', $username, PDO::PARAM_STR);
         	$stmt->execute();
 
@@ -694,7 +646,6 @@ class Database{
         }catch(PDOException $e) {
         	return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function addYubiKey(string $username, string $token, string $id){
@@ -730,8 +681,7 @@ class Database{
 
         try{
             $username = strtolower($username);
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        	$conn = db();
 
         	$stmt = $conn->prepare("UPDATE users SET yubico_otp = :yubico_otp WHERE username = :username");
             $stmt->bindParam(':yubico_otp', $yubico_otp, PDO::PARAM_STR);
@@ -750,7 +700,6 @@ class Database{
         }catch(PDOException $e) {
         	return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function removeYubiKey(string $username, string $token, string $id){
@@ -783,10 +732,8 @@ class Database{
 
         try{
             $username = strtolower($username);
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $stmt = $conn->prepare("UPDATE users SET yubico_otp = :yubico_otp WHERE username = :username");
+            $stmt = db()->prepare("UPDATE users SET yubico_otp = :yubico_otp WHERE username = :username");
             $stmt->bindParam(':yubico_otp', $yubico_otp, PDO::PARAM_STR);
             $stmt->bindParam(':username', $username, PDO::PARAM_STR);
         	$stmt->execute();
@@ -797,7 +744,6 @@ class Database{
         }catch(PDOException $e) {
         	return Display::json(505);
         }
-        $conn = null;
     }
 
     public static function forgotUsername(string $email) : string{
@@ -806,10 +752,7 @@ class Database{
 
         try{
 
-        	$conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
-        	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        	$stmt = $conn->prepare("SELECT username FROM users WHERE email = :email");
+        	$stmt = db()->prepare("SELECT username FROM users WHERE email = :email");
         	$stmt->bindParam(':email', $sub_email, PDO::PARAM_STR);
         	$stmt->execute();
 
@@ -858,9 +801,7 @@ class Database{
         }catch(PDOException $e) {
             return Display::json(505);
         }
-        $conn = null;
     }
-
 }
 
 ?>

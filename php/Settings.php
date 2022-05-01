@@ -156,4 +156,10 @@ class Settings{
 
 }
 
+function db() {
+    $conn = new PDO("mysql:host=" . Settings::getDBHost() . ";dbname=" . Settings::getDBDatabase(), Settings::getDBUsername(), Settings::getDBPassword());
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $conn;
+}
+
 ?>
